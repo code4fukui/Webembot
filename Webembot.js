@@ -44,20 +44,18 @@ export class Webembot {
         e51a read writeWithoutResponse // red (right)
         e51b read writeWithoutResponse // red with brightness
 
-        // buzzer
-        e521 read writeWithoutResponse
+        e521 read writeWithoutResponse // buzzer
 
-        // key status change -> 2byte // big endian #*9876543210 の順、12bit
-        e531 notify read
+        e531 notify read // key status change -> 2byte // big endian #*9876543210 の順、12bit
 
-        e532 notify read
+        e532 notify read // light sonsor
 
         e533 read write
 
         e5e1 read
         e5e2 read
         e5e3 read
-        e5e4 read // ?, light sensor? 2byte
+        e5e4 read // 2byte
       */
     }
     console.log();
@@ -100,8 +98,8 @@ export class Webembot {
         const ch = await service.getCharacteristic(uuid(i));
         embot.others.push(ch);
       }
-      for (const i of ["e531", "e532"]) {
-        const ch = await service.getCharacteristic(uuid(i));
+      {
+        const ch = await service.getCharacteristic(uuid("e531")); // ten key
         ch.addEventListener('characteristicvaluechanged', async e => {
           const data = new Uint8Array(e.target.value.buffer);
           const n = (data[1] << 8) | data[0]; // data.length == 2
@@ -110,6 +108,16 @@ export class Webembot {
           embot.setKeyState(n);
         });
         ch.startNotifications();
+      }
+      {
+        const ch = await service.getCharacteristic(uuid("e532")); // light sensor
+        ch.addEventListener('characteristicvaluechanged', async e => {
+          const data = new Uint8Array(e.target.value.buffer);
+          const n = (data[1] << 8) | data[0]; // data.length == 2
+          console.log(n, data.length);
+        });
+        ch.startNotifications();
+        embot.lightsensor = ch;
       }
     }
     return embot;
@@ -165,12 +173,19 @@ export class Webembot {
     }
   }
   async getBrightness() {
-    await this.writeBLE(this.others[2], 1);
-    const ch = this.others[0];
-    const data = await ch.readValue();
-    const n = new Uint8Array(data.buffer);
-    const res = (n[1] << 8) | n[0];
-    return res;
+    if (!this.f503i) {
+      await this.writeBLE(this.others[2], 1);
+      const ch = this.others[0];
+      const data = await ch.readValue();
+      const n = new Uint8Array(data.buffer);
+      const res = (n[1] << 8) | n[0];
+      return res;
+    } else {
+      const data = await this.lightsensor.readValue();
+      const n = new Uint8Array(data.buffer);
+      const res = (n[1] << 8) | n[0];
+      return res;
+    }
   }
   setKeyState(n) {
     this.keystate = n;

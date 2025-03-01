@@ -9,6 +9,7 @@ Webembot is a library for controlling <a href=https://www.embot.jp/>embot</a> ov
 <button id=btnstart>connect and demo</button><br>
 <label><input type=checkbox id=chksound>sound on</label><br>
 F503i keystate <input type=text id=inkey style="width: 6em;"><br>
+F503i brightness <input type=text id=inbr style="width: 3em;"><br>
 
 
 <script type="module">
@@ -28,6 +29,7 @@ btnstart.onclick = async () => {
       await emb.led(3, (i & 1) != 0);
       await sleep(500);
       console.log(i);
+      inbr.value = await emb.getBrightness();
     }
   }
   for (;;) {
