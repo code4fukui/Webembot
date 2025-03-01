@@ -39,10 +39,10 @@ export class Webembot {
         // led
         e515 read writeWithoutResponse // green (left)
         e516 read writeWithoutResponse // yellow (center)
-        e517 read writeWithoutResponse // brightness green
-        e518 read writeWithoutResponse // brightness yellow
+        e517 read writeWithoutResponse // green with brightness
+        e518 read writeWithoutResponse // yellow with brightness
         e51a read writeWithoutResponse // red (right)
-        e51b read writeWithoutResponse // brightness red
+        e51b read writeWithoutResponse // red with brightness
 
         // buzzer
         e521 read writeWithoutResponse
@@ -72,9 +72,11 @@ export class Webembot {
       ];
     } else {
       embot.leds = [
+        /*
         await service.getCharacteristic(uuid("e515")),
         await service.getCharacteristic(uuid("e516")),
         await service.getCharacteristic(uuid("e51a")),
+        */
         await service.getCharacteristic(uuid("e517")),
         await service.getCharacteristic(uuid("e518")),
         await service.getCharacteristic(uuid("e51b")),
@@ -110,13 +112,6 @@ export class Webembot {
         ch.startNotifications();
       }
     }
-    if (f503i) {
-      const brightness = 255;
-      const emb = embot;
-      await emb.writeBLE(emb.leds[3], brightness);
-      await emb.writeBLE(emb.leds[4], brightness);
-      await emb.writeBLE(emb.leds[5], brightness);
-    }
     return embot;
   }
   constructor(device, server, service, plus, f503i) {
@@ -132,28 +127,17 @@ export class Webembot {
     buf[0] = parseInt(val);
     await char.writeValueWithoutResponse(buf.buffer);
   }
-  async setBrightness(id, val) { // for F503i, id: if 0 all
-    if (!this.f503i || id < 1 || id > this.leds.length) {
-      console.log("led " + id + " is not supported brightness");
-      return;
-    }
-    const emb = this;
-    const brightness = val;
-    if (id) {
-      await emb.writeBLE(emb.leds[3 + id - 1], brightness);
-    } else {
-      await emb.writeBLE(emb.leds[3], brightness);
-      await emb.writeBLE(emb.leds[4], brightness);
-      await emb.writeBLE(emb.leds[5], brightness);
-    }
-  }
-  async led(id, val) { // id: 1-3, val: true or false
+  async led(id, val, brightness = 255) { // id: 1-3, val: true or false, brightness is only for F503i
     if (id < 1 || id > this.leds.length) {
       console.log("led " + id + " is not supported");
       return;
     }
     const target = this.leds[id - 1];
-    await this.writeBLE(target, val ? 1 : 2);
+    if (!this.f503i) {
+      await this.writeBLE(target, val ? 1 : 2);
+    } else {
+      await this.writeBLE(target, val ? brightness : 0);
+    }
   }
   async servo(id, val) { // id: 1-3, val: 0?
     if (this.f503i) {
