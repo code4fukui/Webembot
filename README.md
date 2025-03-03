@@ -14,3 +14,4 @@ Webembot is a driver API for embot, embot plus and F503i.
 ## related
 
 - [wakwak-koba/F503i: 小学館 小学8年生 2025年スペシャル4月号に付属の F503i を ESP32 で操るライブラリ](https://github.com/wakwak-koba/F503i)
+- [F503i and embot driver in Swift (beta)](https://github.com/code4fukui/Macembot)
