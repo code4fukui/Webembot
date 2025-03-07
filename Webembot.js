@@ -128,7 +128,11 @@ export class Webembot {
     this.service = service;
     this.plus = plus;
     this.f503i = f503i;
+    // for F530i
     this.keylisteners = [];
+    this.keystate = (1 << 13) - 1; // 12bit
+    this.keybuflen = 16;
+    this.keybuf = [];
   }
   async writeBLE(char, val) {
     const buf = new Uint8Array(1);
@@ -172,7 +176,7 @@ export class Webembot {
       console.log(i, n.length, n);
     }
   }
-  async getBrightness() {
+  async getBrightness() { // F503i 0-600
     if (!this.f503i) {
       await this.writeBLE(this.others[2], 1);
       const ch = this.others[0];
@@ -188,12 +192,33 @@ export class Webembot {
     }
   }
   setKeyState(n) {
+    const bk = this.keystate;
     this.keystate = n;
+    const keys = "0123456789*#";
+    const down = bk & ~n; // 1 -> 0
+    const up = ~bk & n; // 0 -> 1
+    for (let i = 0; i < 12; i++) {
+      const c = keys[i];
+      if (down & (1 << i)) {
+        console.log("key down: " + c);
+        //if let f = funckeydown { f(c) }
+        if (this.keybuf.length == this.keybuflen) {
+          this.keybuf.shift();
+        }
+        this.keybuf.push(c);
+      } else if (up & (1 << i)) {
+        console.log("key up: " + c);
+        //if let f = funckeyup { f(c) }
+      }
+    }
     for (const l of this.keylisteners) {
       l(n);
     }
   }
   addKeyEventListener(listener) {
     this.keylisteners.push(listener);
+  }
+  getKey() {
+    return this.keybuf.pop();
   }
 }

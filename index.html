@@ -7,10 +7,23 @@ Webembot is a library for controlling <a href=https://www.embot.jp/>embot</a> ov
 <br>
 
 <button id=btnstart>connect and demo</button><br>
-<label><input type=checkbox id=chksound>sound on</label><br>
-F503i keystate <input type=text id=inkey style="width: 6em;"><br>
-F503i brightness <input type=text id=inbr style="width: 3em;"><br>
+<br>
 
+<div id=panels>
+demo sound <label><input type=checkbox id=chksound>on</label>
+buzzer <span><input type=text id=inbuzzer style="width: 2em;" value=51><input type=text id=inbuzzer2 style="width: 2em;" value=200><button id=btnbuzzer>on</button></span>
+F503i brightness <input type=text id=inbr style="width: 3em;">
+F503i keystate <input type=text id=inkey style="width: 6em;">
+F503i getKey <input type=text id=ingetkey style="width: 6em;">
+</div>
+
+<style>
+#panels {
+  display: inline-grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .2em 1em;
+}
+</style>
 
 <script type="module">
 import { Webembot } from "./Webembot.js";
@@ -21,7 +34,20 @@ btnstart.onclick = async () => {
   // for F503i
   emb.addKeyEventListener((keystate) => {
     inkey.value = keystate.toString(2);
+    for (;;) {
+      const key = emb.getKey();
+      if (!key) break;
+      ingetkey.value += key;
+      ingetkey.scrollLeft = ingetkey.scrollWidth;
+    }
   });
+  btnbuzzer.onclick = async () => {
+    const n = inbuzzer.value;
+    const msec = inbuzzer2.value;
+    emb.buzzer(n);
+    await sleep(msec);
+    emb.buzzer(0);
+  };
   if (emb.f503i) {
     for (let i = 0;; i++) {
       await emb.led(1, (i & 4) != 0);
@@ -30,6 +56,9 @@ btnstart.onclick = async () => {
       await sleep(500);
       console.log(i);
       inbr.value = await emb.getBrightness();
+      if (chksound.checked) {
+        await emb.buzzer(Math.random() * 100);
+      }
     }
   }
   for (;;) {
