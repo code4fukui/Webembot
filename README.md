@@ -4,6 +4,15 @@ Webembot is a driver API for embot, embot plus and F503i.
 
 - [DEMO](https://code4fukui.github.io/Webembot/)
 
+## API
+
+- led(idx, n, brightness = 255) // idx:1-3, n:boolean, brightness:0-255
+- buzzer(n) // 51=C?
+- servo(idx, n) // idx:1-3, n:0-180
+- getBrightness() // 0-600
+- getKey() // "0"-"9","*","#" from keybuffer
+- setKeyEventListener(listener) // keystate
+
 ## reference
 
 - [embot（エムボット） | 遊ぶほど、プログラミングが楽しくなる。](https://www.embot.jp/)
