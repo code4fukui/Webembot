@@ -219,6 +219,6 @@ export class Webembot {
     this.keylisteners.push(listener);
   }
   getKey() {
-    return this.keybuf.pop();
+    return this.keybuf.pop() ?? "";
   }
 }
